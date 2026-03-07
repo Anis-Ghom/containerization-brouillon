@@ -1,0 +1,152 @@
+# =============================================================================
+# COMMIT: All 4 members. Every member must contribute to this file and review it.
+# Your task:
+#   Members 1 & 2 (frontend pair): Maintain nginx + frontend blocks; both contribute; all 4 review.
+#   Member 3 (API1 owner): Maintain api1 + db1 blocks; all 4 review.
+#   Member 4 (API2 owner): Maintain api2 + db2 + redis blocks; all 4 review.
+#   All 4: Contribute to volumes, networks, and full file; review every section.
+# Network isolation: Frontend->API1, Frontend->API2, API1->DB1, API2->DB2, API2->Redis.
+# =============================================================================
+
+services:
+  # --- Maintained by Members 1 & 2 (frontend pair). All 4 contribute and review. ---
+  nginx:
+    image: nginx:1.25.3-alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - frontend_net
+    depends_on:
+      - frontend
+      - api1
+      - api2
+    restart: unless-stopped
+
+  # --- Maintained by Members 1 & 2 (frontend pair). All 4 contribute and review. ---
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      # Browser runs on host, so APIs must be reachable at localhost
+      - VITE_API1_URL=http://localhost:8001
+      - VITE_API2_URL=http://localhost:8002
+    volumes:
+      # Bind mount for hot reload: code changes without container restart
+      - ./frontend/src:/app/src
+    networks:
+      - frontend_net
+    restart: unless-stopped
+
+  # --- Maintained by Member 3 (API1 owner). All 4 contribute and review. ---
+  api1:
+    build:
+      context: ./api1
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - PORT=8001
+      - DB_HOST=db1
+      - DB_PORT=5432
+      - DB_NAME=products
+      - DB_USER=api1
+      - DB_PASSWORD=${API1_DB_PASSWORD:-api1secret}
+    networks:
+      - frontend_net
+      - api1_db_net
+    depends_on:
+      db1:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # --- Maintained by Member 4 (API2 owner). All 4 contribute and review. BONUS: Redis queue. ---
+  api2:
+    build:
+      context: ./api2
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8002"
+    environment:
+      - PORT=8002
+      - DB_HOST=db2
+      - DB_PORT=5432
+      - DB_NAME=orders
+      - DB_USER=api2
+      - DB_PASSWORD=${API2_DB_PASSWORD:-api2secret}
+      - REDIS_URL=redis://redis:6379
+    networks:
+      - frontend_net
+      - api2_db_net
+      - api2_redis_net
+    depends_on:
+      db2:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  # --- Maintained by Member 4 (API2 owner). Redis queue. All 4 contribute and review. ---
+  redis:
+    image: redis:7.2-alpine3.19
+    networks:
+      - api2_redis_net
+    restart: unless-stopped
+    # No ports to host - only API2 can reach Redis
+
+  db1:
+    image: postgres:16.4-alpine3.20
+    environment:
+      - POSTGRES_USER=api1
+      - POSTGRES_PASSWORD=${API1_DB_PASSWORD:-api1secret}
+      - POSTGRES_DB=products
+    volumes:
+      - api1-db-data:/var/lib/postgresql/data
+    networks:
+      - api1_db_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U api1 -d products"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    # No ports to host - network isolation
+
+  db2:
+    image: postgres:16.4-alpine3.20
+    environment:
+      - POSTGRES_USER=api2
+      - POSTGRES_PASSWORD=${API2_DB_PASSWORD:-api2secret}
+      - POSTGRES_DB=orders
+    volumes:
+      - api2-db-data:/var/lib/postgresql/data
+    networks:
+      - api2_db_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U api2 -d orders"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    # No ports to host - network isolation
+
+# --- All 4 members contribute and review (volumes and networks). ---
+volumes:
+  api1-db-data:
+  api2-db-data:
+
+networks:
+  frontend_net:
+    driver: bridge
+  api1_db_net:
+    driver: bridge
+  api2_db_net:
+    driver: bridge
+  api2_redis_net:
+    driver: bridge

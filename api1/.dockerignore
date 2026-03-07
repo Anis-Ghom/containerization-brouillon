@@ -1,0 +1,6 @@
+# COMMIT: Member 3 only. API1 owner.
+# Your task: API1 Docker ignore. You own all api1/ files.
+node_modules
+.git
+*.md
+.env*

@@ -1,0 +1,109 @@
+# =============================================================================
+# COMMIT: All 4 members. Every member must contribute to this file and review it.
+# Your task:
+#   Members 1 & 2 (frontend pair): Maintain frontend build, Trivy frontend, build-push frontend; all 4 review.
+#   Member 3 (API1 owner): Maintain api1 build, Trivy api1, build-push api1; all 4 review.
+#   Member 4 (API2 owner): Maintain api2 build, Trivy api2, build-push api2; all 4 review.
+#   All 4: Contribute to trigger, env, job structure, checkout, Buildx, login; review every section.
+# =============================================================================
+name: CI/CD Pipeline
+
+# --- All 4 contribute and review (workflow trigger and env). ---
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+env:
+  REGISTRY: docker.io
+
+jobs:
+  # --- Security scan: Members 1&2 maintain frontend, Member 3 api1, Member 4 api2; all 4 review. ---
+  security-scan:
+    name: Trivy security scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Maintained by Members 1 & 2 (frontend pair). All 4 review.
+      - name: Build frontend image
+        run: docker build -t microservices-frontend:scan ./frontend
+      - name: Run Trivy on frontend
+        uses: aquasec/trivy-action@master
+        with:
+          image-ref: 'microservices-frontend:scan'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          exit-code: '1'
+
+      # Maintained by Member 3 (API1 owner). All 4 review.
+      - name: Build api1 image
+        run: docker build -t microservices-api1:scan ./api1
+      - name: Run Trivy on api1
+        uses: aquasec/trivy-action@master
+        with:
+          image-ref: 'microservices-api1:scan'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          exit-code: '1'
+
+      # Maintained by Member 4 (API2 owner). All 4 review.
+      - name: Build api2 image
+        run: docker build -t microservices-api2:scan ./api2
+      - name: Run Trivy on api2
+        uses: aquasec/trivy-action@master
+        with:
+          image-ref: 'microservices-api2:scan'
+          severity: 'CRITICAL,HIGH,MEDIUM'
+          exit-code: '1'
+
+  # --- Build and push: all 4 contribute and review (setup + each service push). ---
+  build-and-push:
+    name: Build and push Docker images
+    runs-on: ubuntu-latest
+    needs: security-scan
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    steps:
+      # All 4 contribute and review (checkout, Buildx, Docker Hub login).
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Maintained by Members 1 & 2 (frontend pair). All 4 review.
+      - name: Build and push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/microservices-frontend:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/microservices-frontend:${{ github.sha }}
+
+      # Maintained by Member 3 (API1 owner). All 4 review.
+      - name: Build and push api1
+        uses: docker/build-push-action@v5
+        with:
+          context: ./api1
+          file: ./api1/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/microservices-api1:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/microservices-api1:${{ github.sha }}
+
+      # Maintained by Member 4 (API2 owner). All 4 review.
+      - name: Build and push api2
+        uses: docker/build-push-action@v5
+        with:
+          context: ./api2
+          file: ./api2/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/microservices-api2:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/microservices-api2:${{ github.sha }}

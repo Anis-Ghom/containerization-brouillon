@@ -1,0 +1,100 @@
+/*
+ * COMMIT: Members 1 & 2 (frontend pair). Shared between both.
+ * Your task: Frontend styles. Both contribute to frontend; Dockerfile and .dockerignore are shared.
+ */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  min-height: 100vh;
+  color: #e8e8e8;
+}
+
+#root {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+h1 {
+  text-align: center;
+  color: #00d9ff;
+  margin-bottom: 2rem;
+  font-weight: 600;
+}
+
+.section {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.section h2 {
+  margin-top: 0;
+  color: #7dd3fc;
+  font-size: 1.1rem;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+li {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+li:last-child {
+  border-bottom: none;
+}
+
+form {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+input, button {
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 0.9rem;
+}
+
+input {
+  background: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  min-width: 120px;
+}
+
+button {
+  background: #0ea5e9;
+  color: #fff;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+button:hover {
+  background: #0284c7;
+}
+
+.error {
+  color: #f87171;
+  font-size: 0.9rem;
+}
+
+.loading {
+  color: #94a3b8;
+}

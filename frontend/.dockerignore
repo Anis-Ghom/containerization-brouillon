@@ -1,0 +1,7 @@
+# COMMIT: Members 1 & 2 (frontend pair). .dockerignore contents SHARED between both.
+# Your task: Frontend Docker ignore. Both members contribute to this file and to frontend/Dockerfile.
+node_modules
+dist
+.git
+*.md
+.env*

@@ -1,0 +1,6 @@
+# COMMIT: Member 4 only. API2 owner.
+# Your task: API2 Docker ignore. You own all api2/ files.
+node_modules
+.git
+*.md
+.env*

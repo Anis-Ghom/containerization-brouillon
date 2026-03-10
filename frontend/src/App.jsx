@@ -5,8 +5,8 @@
 /*member1 start commit*/
 import { useState, useEffect } from 'react'
 
-const API1_URL = import.meta.env.VITE_API1_URL || 'http://localhost:8001'
-const API2_URL = import.meta.env.VITE_API2_URL || 'http://localhost:8002'
+const API1_URL = import.meta.env.VITE_API1_URL || '/api1'
+const API2_URL = import.meta.env.VITE_API2_URL || '/api2'
 
 export default function App() {
   const [products, setProducts] = useState([])

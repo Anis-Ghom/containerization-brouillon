@@ -17,6 +17,7 @@ RUN addgroup -g 1001 -S appgroup && adduser -u 1001 -S appuser -G appgroup
 COPY --from=deps /app/node_modules ./node_modules
 COPY package*.json ./
 COPY --chown=appuser:appgroup . .
+RUN chown -R appuser:appgroup /app
 
 USER appuser
 EXPOSE 5173

@@ -29,16 +29,29 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiSpec))
 
 // BONUS: GraphQL endpoint
 const schema = buildSchema(`
-  type Product { id: Int!, name: String!, price: Float! }
-  type Query { products: [Product!]! }
+  type Product { id: Int!, name: String!, price: Float!, category: String }
+  type Query { products(category: String): [Product!]! }
 `)
 const root = {
-  products: async () => {
-    const { rows } = await pool.query('SELECT id, name, price FROM products ORDER BY id')
-    return rows.map(r => ({ id: r.id, name: r.name, price: parseFloat(r.price) }))
+  products: async ({ category }) => {
+    let query = 'SELECT id, name, price, category FROM products'
+    const params = []
+    if (category) { params.push(category); query += ' WHERE category = $1' }
+    query += ' ORDER BY id'
+    const { rows } = await pool.query(query, params)
+    return rows.map(r => ({ id: r.id, name: r.name, price: parseFloat(r.price), category: r.category || 'General' }))
   }
 }
 app.use('/graphql', graphqlHTTP({ schema, rootValue: root, graphiql: true }))
+
+// Page d'accueil API (évite 404 sur http://localhost:8001)
+app.get('/', (req, res) => {
+  res.json({
+    service: 'API1 — Products',
+    version: '1.0',
+    endpoints: { health: '/health', products: '/products', apiDocs: '/api-docs', graphql: '/graphql' },
+  })
+})
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'api1' })
@@ -46,7 +59,15 @@ app.get('/health', (req, res) => {
 
 app.get('/products', async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT id, name, price FROM products ORDER BY id')
+    const category = req.query.category
+    let query = 'SELECT id, name, price, category FROM products'
+    const params = []
+    if (category) {
+      params.push(category)
+      query += ' WHERE category = $1'
+    }
+    query += ' ORDER BY id'
+    const { rows } = await pool.query(query, params)
     res.json({ products: rows })
   } catch (err) {
     console.error(err)
@@ -56,13 +77,14 @@ app.get('/products', async (req, res) => {
 
 app.post('/products', async (req, res) => {
   try {
-    const { name, price } = req.body
+    const { name, price, category } = req.body
     if (!name || price == null) {
       return res.status(400).json({ error: 'name and price required' })
     }
+    const cat = category || 'General'
     const { rows } = await pool.query(
-      'INSERT INTO products (name, price) VALUES ($1, $2) RETURNING id, name, price',
-      [name, parseFloat(price)]
+      'INSERT INTO products (name, price, category) VALUES ($1, $2, $3) RETURNING id, name, price, category',
+      [name, parseFloat(price), cat]
     )
     res.status(201).json({ product: rows[0] })
   } catch (err) {
@@ -94,9 +116,11 @@ async function initDb() {
     CREATE TABLE IF NOT EXISTS products (
       id SERIAL PRIMARY KEY,
       name VARCHAR(255) NOT NULL,
-      price DECIMAL(10,2) NOT NULL
+      price DECIMAL(10,2) NOT NULL,
+      category VARCHAR(100) DEFAULT 'General'
     )
   `)
+  try { await client.query(`ALTER TABLE products ADD COLUMN category VARCHAR(100) DEFAULT 'General'`) } catch (e) { if (e.code !== '42701') throw e }
   client.release()
 }
 

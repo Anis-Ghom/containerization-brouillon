@@ -15,6 +15,12 @@ export const openApiSpec = {
       }
     },
     '/orders/{id}': {
+      patch: {
+        summary: 'Update order status',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        requestBody: { content: { 'application/json': { schema: { type: 'object', required: ['status'], properties: { status: { type: 'string', enum: ['pending', 'shipped', 'delivered'] } } } } } },
+        responses: { 200: { description: 'Updated' }, 404: { description: 'Not found' } }
+      },
       delete: {
         summary: 'Delete order by id',
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],

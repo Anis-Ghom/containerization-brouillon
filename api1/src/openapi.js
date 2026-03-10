@@ -7,10 +7,14 @@ export const openApiSpec = {
       get: { summary: 'Health check', responses: { 200: { description: 'OK' } } }
     },
     '/products': {
-      get: { summary: 'List products', responses: { 200: { description: 'List of products' } } },
+      get: {
+        summary: 'List products',
+        parameters: [{ name: 'category', in: 'query', schema: { type: 'string' }, description: 'Filter by category' }],
+        responses: { 200: { description: 'List of products' } }
+      },
       post: {
         summary: 'Create product',
-        requestBody: { content: { 'application/json': { schema: { type: 'object', required: ['name', 'price'], properties: { name: { type: 'string' }, price: { type: 'number' } } } } } },
+        requestBody: { content: { 'application/json': { schema: { type: 'object', required: ['name', 'price'], properties: { name: { type: 'string' }, price: { type: 'number' }, category: { type: 'string', default: 'General' } } } } } },
         responses: { 201: { description: 'Created' } }
       }
     },

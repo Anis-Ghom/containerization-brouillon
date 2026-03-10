@@ -39,6 +39,15 @@ app.use(express.json())
 // BONUS: OpenAPI / Swagger documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiSpec))
 
+// Page d'accueil API (évite 404 sur http://localhost:8002)
+app.get('/', (req, res) => {
+  res.json({
+    service: 'API2 — Orders',
+    version: '1.0',
+    endpoints: { health: '/health', orders: '/orders', orderEvents: '/orders/events', apiDocs: '/api-docs' },
+  })
+})
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'api2' })
 })
@@ -57,7 +66,7 @@ app.get('/orders/events', async (req, res) => {
 
 app.get('/orders', async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT id, product_id, quantity, created_at FROM orders ORDER BY id DESC')
+    const { rows } = await pool.query('SELECT id, product_id, quantity, status, created_at FROM orders ORDER BY id DESC')
     res.json({ orders: rows })
   } catch (err) {
     console.error(err)
@@ -73,16 +82,37 @@ app.post('/orders', async (req, res) => {
     }
     const qty = parseInt(quantity, 10) || 1
     const { rows } = await pool.query(
-      'INSERT INTO orders (product_id, quantity) VALUES ($1, $2) RETURNING id, product_id, quantity, created_at',
+      'INSERT INTO orders (product_id, quantity, status) VALUES ($1, $2, \'pending\') RETURNING id, product_id, quantity, status, created_at',
       [parseInt(product_id, 10), qty]
     )
     res.status(201).json({ order: rows[0] })
     // BONUS: push order event to Redis queue
     const redis = await getRedis()
     if (redis) {
-      await redis.lPush(QUEUE_KEY, JSON.stringify({ orderId: rows[0].id, product_id, quantity: qty, at: new Date().toISOString() }))
+      await redis.lPush(QUEUE_KEY, JSON.stringify({ orderId: rows[0].id, product_id, quantity: qty, status: 'pending', at: new Date().toISOString() }))
       await redis.lTrim(QUEUE_KEY, 0, 99)
     }
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+// Mise à jour du statut d'une commande (pending | shipped | delivered)
+app.patch('/orders/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10)
+    const { status } = req.body
+    const allowed = ['pending', 'shipped', 'delivered']
+    if (!id || !status || !allowed.includes(status)) {
+      return res.status(400).json({ error: 'valid id and status (pending|shipped|delivered) required' })
+    }
+    const { rows, rowCount } = await pool.query(
+      'UPDATE orders SET status = $1 WHERE id = $2 RETURNING id, product_id, quantity, status, created_at',
+      [status, id]
+    )
+    if (rowCount === 0) return res.status(404).json({ error: 'order not found' })
+    res.json({ order: rows[0] })
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: err.message })
@@ -113,9 +143,11 @@ async function initDb() {
       id SERIAL PRIMARY KEY,
       product_id INTEGER NOT NULL,
       quantity INTEGER NOT NULL DEFAULT 1,
+      status VARCHAR(20) DEFAULT 'pending',
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `)
+  try { await client.query(`ALTER TABLE orders ADD COLUMN status VARCHAR(20) DEFAULT 'pending'`) } catch (e) { if (e.code !== '42701') throw e }
   client.release()
 }
 

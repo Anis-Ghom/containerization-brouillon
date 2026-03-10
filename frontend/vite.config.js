@@ -2,6 +2,7 @@
  * COMMIT: Members 1 & 2 (frontend pair). Shared between both.
  * Your task: Vite config and hot reload. Both contribute to frontend; Dockerfile and .dockerignore are shared.
  */
+/*member1 start commit*/
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -15,3 +16,4 @@ export default defineConfig({
     },
   },
 })
+/*member1 end commit*/

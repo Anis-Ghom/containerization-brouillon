@@ -7,7 +7,7 @@
 #   All 4: Contribute to volumes, networks, and full file; review every section.
 # Network isolation: Frontend->API1, Frontend->API2, API1->DB1, API2->DB2, API2->Redis.
 # =============================================================================
-
+#member1 start commit
 services:
   # --- Maintained by Members 1 & 2 (frontend pair). All 4 contribute and review. ---
   nginx:
@@ -23,8 +23,9 @@ services:
       - api1
       - api2
     restart: unless-stopped
-
+#member1 end commit 
   # --- Maintained by Members 1 & 2 (frontend pair). All 4 contribute and review. ---
+#member2 start commit
   frontend:
     build:
       context: ./frontend
@@ -41,7 +42,8 @@ services:
     networks:
       - frontend_net
     restart: unless-stopped
-
+#member2 end commit
+#member3 start commit
   # --- Maintained by Member 3 (API1 owner). All 4 contribute and review. ---
   api1:
     build:
@@ -63,7 +65,8 @@ services:
       db1:
         condition: service_healthy
     restart: unless-stopped
-
+#member3 end commit
+#member4 start commit
   # --- Maintained by Member 4 (API2 owner). All 4 contribute and review. BONUS: Redis queue. ---
   api2:
     build:
@@ -97,7 +100,8 @@ services:
       - api2_redis_net
     restart: unless-stopped
     # No ports to host - only API2 can reach Redis
-
+#member4 end commit
+#member3 start commit
   db1:
     image: postgres:16.4-alpine3.20
     environment:
@@ -116,7 +120,8 @@ services:
       start_period: 10s
     restart: unless-stopped
     # No ports to host - network isolation
-
+#member3 end commit
+#member4 start commit
   db2:
     image: postgres:16.4-alpine3.20
     environment:
@@ -135,8 +140,9 @@ services:
       start_period: 10s
     restart: unless-stopped
     # No ports to host - network isolation
-
+#member4 end commit
 # --- All 4 members contribute and review (volumes and networks). ---
+#member2 start commit
 volumes:
   api1-db-data:
   api2-db-data:
@@ -150,3 +156,4 @@ networks:
     driver: bridge
   api2_redis_net:
     driver: bridge
+#member2 end commit

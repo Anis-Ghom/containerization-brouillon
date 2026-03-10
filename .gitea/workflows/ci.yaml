@@ -6,6 +6,7 @@
 #   Member 4 (API2 owner): Maintain api2 build, Trivy api2, build-push api2; all 4 review.
 #   All 4: Contribute to trigger, env, job structure, checkout, Buildx, login; review every section.
 # =============================================================================
+#member1 start commit
 name: CI/CD Pipeline
 
 # --- All 4 contribute and review (workflow trigger and env). ---
@@ -36,7 +37,8 @@ jobs:
           image-ref: 'microservices-frontend:scan'
           severity: 'CRITICAL,HIGH,MEDIUM'
           exit-code: '1'
-
+#member1 end commit
+#member3 start commit
       # Maintained by Member 3 (API1 owner). All 4 review.
       - name: Build api1 image
         run: docker build -t microservices-api1:scan ./api1
@@ -46,7 +48,8 @@ jobs:
           image-ref: 'microservices-api1:scan'
           severity: 'CRITICAL,HIGH,MEDIUM'
           exit-code: '1'
-
+#member3 end commit
+#member4 start commit
       # Maintained by Member 4 (API2 owner). All 4 review.
       - name: Build api2 image
         run: docker build -t microservices-api2:scan ./api2
@@ -56,7 +59,8 @@ jobs:
           image-ref: 'microservices-api2:scan'
           severity: 'CRITICAL,HIGH,MEDIUM'
           exit-code: '1'
-
+#member4 end commit
+#member2 start commit
   # --- Build and push: all 4 contribute and review (setup + each service push). ---
   build-and-push:
     name: Build and push Docker images
@@ -85,7 +89,8 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/microservices-frontend:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/microservices-frontend:${{ github.sha }}
-
+#member2 end commit
+#member3 start commit
       # Maintained by Member 3 (API1 owner). All 4 review.
       - name: Build and push api1
         uses: docker/build-push-action@v5
@@ -96,7 +101,8 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/microservices-api1:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/microservices-api1:${{ github.sha }}
-
+#member3 end commit
+#member4 start commit
       # Maintained by Member 4 (API2 owner). All 4 review.
       - name: Build and push api2
         uses: docker/build-push-action@v5
@@ -107,3 +113,4 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/microservices-api2:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/microservices-api2:${{ github.sha }}
+#member4 end commit

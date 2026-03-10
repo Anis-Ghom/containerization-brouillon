@@ -2,6 +2,7 @@
  * COMMIT: Members 1 & 2 (frontend pair). Shared between both.
  * Your task: Frontend styles. Both contribute to frontend; Dockerfile and .dockerignore are shared.
  */
+/*member2 start commit*/
 * {
   box-sizing: border-box;
 }
@@ -98,3 +99,4 @@ button:hover {
 .loading {
   color: #94a3b8;
 }
+/*member2 end commit*/

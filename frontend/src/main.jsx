@@ -2,6 +2,7 @@
  * COMMIT: Members 1 & 2 (frontend pair). Shared between both.
  * Your task: React entry point. Both contribute to frontend; Dockerfile and .dockerignore are shared.
  */
+/*member2 start commit*/
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.jsx'
@@ -12,3 +13,4 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <App />
   </React.StrictMode>,
 )
+/*member2 end commit*/

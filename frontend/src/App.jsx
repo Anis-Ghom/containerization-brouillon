@@ -2,6 +2,7 @@
  * COMMIT: Members 1 & 2 (frontend pair). Shared between both.
  * Your task: Main app and API integration (calls API1 & API2). Both contribute to frontend; Dockerfile and .dockerignore are shared.
  */
+/*member1 start commit*/
 import { useState, useEffect } from 'react'
 
 const API1_URL = import.meta.env.VITE_API1_URL || 'http://localhost:8001'
@@ -142,3 +143,4 @@ export default function App() {
     </>
   )
 }
+/*member1 end commit*/

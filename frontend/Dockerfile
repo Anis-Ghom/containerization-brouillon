@@ -3,12 +3,14 @@
 # BONUS: Multi-stage build — smaller final image.
 # Pinned base image - no :latest
 # --- Stage 1: install dependencies ---
+#member1 start commit
 FROM node:20.19-alpine3.20 AS deps
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
-
+#member1 end commit
 # --- Stage 2: runtime (only app + deps, no build tools) ---
+#member2 start commit
 FROM node:20.19-alpine3.20
 WORKDIR /app
 RUN addgroup -g 1001 -S appgroup && adduser -u 1001 -S appuser -G appgroup
@@ -21,3 +23,4 @@ EXPOSE 5173
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget -q -O- http://localhost:5173/ || exit 1
 CMD ["npm", "run", "dev"]
+#member2 end commit

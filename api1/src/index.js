@@ -71,6 +71,23 @@ app.post('/products', async (req, res) => {
   }
 })
 
+app.delete('/products/:id', async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10)
+    if (!id) {
+      return res.status(400).json({ error: 'valid id required' })
+    }
+    const { rowCount } = await pool.query('DELETE FROM products WHERE id = $1', [id])
+    if (rowCount === 0) {
+      return res.status(404).json({ error: 'product not found' })
+    }
+    res.json({ deleted: true, id })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: err.message })
+  }
+})
+
 async function initDb() {
   const client = await pool.connect()
   await client.query(`

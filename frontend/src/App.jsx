@@ -70,6 +70,24 @@ export default function App() {
       .catch((e) => setError2(e.message))
   }
 
+  const deleteProduct = (id) => {
+    fetch(`${API1_URL}/products/${id}`, { method: 'DELETE' })
+      .then((res) => {
+        if (!res.ok) throw new Error(`delete failed (${res.status})`)
+        setProducts((prev) => prev.filter((p) => p.id !== id))
+      })
+      .catch((e) => setError1(e.message))
+  }
+
+  const deleteOrder = (id) => {
+    fetch(`${API2_URL}/orders/${id}`, { method: 'DELETE' })
+      .then((res) => {
+        if (!res.ok) throw new Error(`delete failed (${res.status})`)
+        setOrders((prev) => prev.filter((o) => o.id !== id))
+      })
+      .catch((e) => setError2(e.message))
+  }
+
   return (
     <>
       <h1>Microservices Demo — Products & Orders</h1>
@@ -85,6 +103,7 @@ export default function App() {
                 <li key={p.id}>
                   <span>{p.name}</span>
                   <span>€{parseFloat(p.price).toFixed(2)}</span>
+                  <button type="button" onClick={() => deleteProduct(p.id)}>Delete</button>
                 </li>
               ))}
             </ul>
@@ -118,6 +137,7 @@ export default function App() {
                 <li key={o.id}>
                   <span>Order #{o.id}</span>
                   <span>Product ID: {o.product_id}, Qty: {o.quantity}</span>
+                  <button type="button" onClick={() => deleteOrder(o.id)}>Delete</button>
                 </li>
               ))}
             </ul>

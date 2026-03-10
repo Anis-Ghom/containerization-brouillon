@@ -11,6 +11,18 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
+    proxy: {
+      '/api1': {
+        target: 'http://api1:8001',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api1/, ''),
+      },
+      '/api2': {
+        target: 'http://api2:8002',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api2/, ''),
+      },
+    },
     watch: {
       usePolling: true,
     },

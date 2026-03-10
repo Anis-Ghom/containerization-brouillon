@@ -13,6 +13,13 @@ export const openApiSpec = {
         requestBody: { content: { 'application/json': { schema: { type: 'object', required: ['name', 'price'], properties: { name: { type: 'string' }, price: { type: 'number' } } } } } },
         responses: { 201: { description: 'Created' } }
       }
+    },
+    '/products/{id}': {
+      delete: {
+        summary: 'Delete product by id',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer' } }],
+        responses: { 200: { description: 'Deleted' }, 404: { description: 'Not found' } }
+      }
     }
   }
 }

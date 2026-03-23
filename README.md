@@ -76,6 +76,14 @@ cp .env.example .env
 docker compose up --build
 ```
 
+## Security override (Compose)
+
+To enable container hardening (no-new-privileges, dropped Linux capabilities, read-only rootfs for Nginx), run:
+
+```bash
+docker compose -f docker-compose.yaml -f docker-compose.security.yaml up --build
+```
+
 - **Via Nginx (single entry):** http://localhost — frontend at `/`, API1 at `/api1/`, API2 at `/api2/`
 - **Direct:** Frontend http://localhost:5173 · API1 http://localhost:8001 · API2 http://localhost:8002  
 - **API docs:** http://localhost:8001/api-docs (API1), http://localhost:8002/api-docs (API2)  

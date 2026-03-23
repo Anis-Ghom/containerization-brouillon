@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>team-08 — Docker &amp; Gitea</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --docker-blue: #2496ed;
+      --docker-dark: #0d3d5c;
+      --gitea-green: #5aa626;
+      --gitea-dark: #2d5016;
+      --bg: #0a1628;
+      --card: rgba(13, 61, 92, 0.45);
+      --text: #f0f4f8;
+      --muted: #9cb3c7;
+      --line: rgba(36, 150, 237, 0.25);
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: "Inter", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .brand-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.25rem;
+      background: linear-gradient(90deg, rgba(13,61,92,0.95) 0%, rgba(45,80,22,0.35) 100%);
+      border-bottom: 1px solid var(--line);
+      z-index: 200;
+    }
+    .brand-bar .logos {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .brand-bar img {
+      height: 28px;
+      width: auto;
+      display: block;
+    }
+    .brand-bar span {
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+    .deck {
+      padding-top: 52px;
+      height: 100%;
+      position: relative;
+    }
+    .slides {
+      display: flex;
+      height: 100%;
+      transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .slide {
+      flex: 0 0 100%;
+      width: 100%;
+      height: 100%;
+      padding: 1.25rem 1.5rem 4.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: auto;
+      border-right: 1px solid var(--line);
+    }
+    .slide-inner {
+      width: 100%;
+      max-width: 960px;
+      padding: 1.5rem 1.75rem;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      border-top: 3px solid var(--docker-blue);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+    }
+    .slide-inner.gitea-accent { border-top-color: var(--gitea-green); }
+    .part-slide .slide-inner {
+      text-align: center;
+      border-top-color: var(--gitea-green);
+      background: linear-gradient(145deg, rgba(13,61,92,0.55), rgba(45,80,22,0.2));
+    }
+    .title-slide .slide-inner {
+      text-align: center;
+      border-top-width: 4px;
+      border-top-color: var(--docker-blue);
+      padding: 2rem 1.75rem;
+    }
+    .presenter-foot {
+      font-size: 0.7rem;
+      color: var(--muted);
+      margin-top: 1rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--line);
+    }
+    h1 {
+      font-size: clamp(1.65rem, 4vw, 2.35rem);
+      font-weight: 700;
+      margin: 0 0 0.5rem;
+      line-height: 1.15;
+      color: #fff;
+    }
+    h2 {
+      font-size: clamp(1.1rem, 2.2vw, 1.45rem);
+      font-weight: 600;
+      margin: 0 0 0.85rem;
+      color: var(--docker-blue);
+    }
+    .gitea-accent h2 { color: var(--gitea-green); }
+    .subtitle {
+      font-size: 1.05rem;
+      color: var(--muted);
+      margin: 0 0 1rem;
+      line-height: 1.5;
+    }
+    p {
+      margin: 0 0 0.65rem;
+      font-size: 0.98rem;
+      line-height: 1.55;
+      color: #e2edf5;
+    }
+    ul {
+      margin: 0;
+      padding-left: 1.15rem;
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+    li { margin-bottom: 0.35rem; }
+    li::marker { color: var(--docker-blue); }
+    .stack-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      margin-top: 0.5rem;
+    }
+    .stack-table th, .stack-table td {
+      border: 1px solid var(--line);
+      padding: 0.5rem 0.65rem;
+      text-align: left;
+    }
+    .stack-table th {
+      background: rgba(36, 150, 237, 0.15);
+      color: #fff;
+      font-weight: 600;
+    }
+    .stack-table td { color: var(--muted); }
+    .mermaid {
+      display: flex;
+      justify-content: center;
+      margin: 0.5rem 0;
+      padding: 0.75rem;
+      border-radius: 10px;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid var(--line);
+    }
+    .slide img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .grid-2 figcaption, .grid-3 figcaption {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 0.25rem;
+    }
+    figure { margin: 0; }
+    .caption { font-size: 0.8rem; color: var(--muted); margin-top: 0.45rem; }
+    .part-label {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--gitea-green);
+      margin-bottom: 0.75rem;
+    }
+    .big-num {
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--docker-blue);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .split-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      text-align: left;
+      margin-top: 1rem;
+      font-size: 0.88rem;
+    }
+    .split-grid div {
+      padding: 0.75rem;
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+      border: 1px solid var(--line);
+    }
+    .split-grid strong { color: var(--docker-blue); display: block; margin-bottom: 0.35rem; }
+    @media (max-width: 720px) {
+      .grid-2, .grid-3, .split-grid { grid-template-columns: 1fr; }
+    }
+    .progress-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--docker-blue), var(--gitea-green));
+      transform-origin: left;
+      transform: scaleX(0);
+      transition: transform 0.4s ease;
+      z-index: 50;
+    }
+    .nav {
+      position: fixed;
+      bottom: 0.85rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      z-index: 100;
+      padding: 0.4rem 0.75rem;
+      background: rgba(10, 22, 40, 0.92);
+      border-radius: 999px;
+      border: 1px solid var(--line);
+    }
+    .nav button {
+      font-family: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 0.4rem 0.85rem;
+      border: none;
+      border-radius: 8px;
+      background: var(--docker-blue);
+      color: #fff;
+      cursor: pointer;
+    }
+    .nav button:disabled { opacity: 0.35; cursor: not-allowed; }
+    .progress {
+      font-size: 0.7rem;
+      color: var(--muted);
+      min-width: 3.5rem;
+      text-align: center;
+    }
+    .hint {
+      position: fixed;
+      bottom: 3.6rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.65rem;
+      color: var(--muted);
+      z-index: 99;
+    }
+  </style>
+</head>
+<body>
+  <div class="brand-bar" aria-hidden="true">
+    <div class="logos">
+      <img src="https://cdn.simpleicons.org/docker/2496ED" alt="Docker" />
+      <img src="https://cdn.simpleicons.org/gitea/5AA626" alt="Gitea" height="28" />
+    </div>
+    <span>team-08 · Containerization Technologies</span>
+  </div>
+
+  <div class="progress-bar" id="progressBar"></div>
+  <div class="deck">
+    <div class="slides" id="slides">
+
+      <section class="slide title-slide">
+        <div class="slide-inner">
+          <div class="logos" style="justify-content:center;display:flex;gap:1.5rem;margin-bottom:1.25rem;">
+            <img src="https://cdn.simpleicons.org/docker/2496ED" alt="" style="height:48px;" />
+            <img src="https://cdn.simpleicons.org/gitea/5AA626" alt="" style="height:48px;" />
+          </div>
+          <h1>Microservices: Products &amp; Orders</h1>
+          <p class="subtitle">Final project team-08. Containers with Docker, automation with Gitea Actions.</p>
+          <p class="subtitle" style="margin-bottom:0;">Anis Amairi, Othman Bouchentouf, Ovia Chanemouganandam, Tom Allory</p>
+          <p class="presenter-foot">Everyone introduces the split on slide 2, then each block below.</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner gitea-accent">
+          <h2>Who presents what</h2>
+          <p>We split the deck into four blocks of six slides so each person speaks about the same amount of time.</p>
+          <div class="split-grid">
+            <div><strong>Slides 1 to 6</strong>Othman leads the opening: title, this split, what the app does, the problem, and the stack table.</div>
+            <div><strong>Slides 7 to 12</strong>Tom covers architecture, networks, how we build images, and the Docker network screenshot.</div>
+            <div><strong>Slides 13 to 18</strong>Ovia covers the UI, how requests and filters work, startup order, and what runs behind the scenes.</div>
+            <div><strong>Slides 19 to 24</strong>Anis walks through Gitea CI, security scans, registry tags, and we close as a group.</div>
+          </div>
+          <p class="presenter-foot">Slides 1 to 6 · suggested main speaker: Othman Bouchentouf</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <h2>What the application is for</h2>
+          <p>It is a small internal-style web app for a product catalog and orders. Someone can see products, add new ones, and place orders against existing product ids.</p>
+          <p>A second column shows orders and a live list of order-related events so you can tell the backend is doing more than static pages.</p>
+          <p class="presenter-foot">Slides 1 to 6</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <h2>How a typical session looks</h2>
+          <p>You open the site through the main entry on port eighty. The page loads products from the first API and orders from the second. Changing a category refreshes the product list only.</p>
+          <p>Creating a product or an order sends data to the right service. The UI stays simple on purpose so the interesting part is how everything runs in containers and ships through CI.</p>
+          <p class="presenter-foot">Slides 1 to 6</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <h2>What we had to deliver</h2>
+          <ul>
+            <li>A believable multi-service app, not a single monolith in disguise.</li>
+            <li>Clear container boundaries, health checks, and sensible defaults for data.</li>
+            <li>A pipeline on Gitea that scans for issues and publishes images we can trace back to a commit.</li>
+          </ul>
+          <p class="presenter-foot">Slides 1 to 6</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <h2>Stack in one place</h2>
+          <table class="stack-table">
+            <thead><tr><th>Layer</th><th>Choice</th></tr></thead>
+            <tbody>
+              <tr><td>UI</td><td>React with Vite</td></tr>
+              <tr><td>Gateway</td><td>Nginx on port 80</td></tr>
+              <tr><td>Products API</td><td>Node, Postgres, GraphQL, OpenAPI docs</td></tr>
+              <tr><td>Orders API</td><td>Node, Postgres, Redis for events</td></tr>
+              <tr><td>Runtime</td><td>Docker Compose with several isolated networks</td></tr>
+              <tr><td>CI</td><td>Gitea Actions, Trivy, Docker Hub</td></tr>
+            </tbody>
+          </table>
+          <p class="presenter-foot">Slides 1 to 6</p>
+        </div>
+      </section>
+
+      <section class="slide part-slide">
+        <div class="slide-inner">
+          <p class="part-label">Part 2 of 4</p>
+          <div class="big-num">7–12</div>
+          <h2>Containers and wiring</h2>
+          <p class="subtitle">Architecture, networks, images, and proof from Docker Desktop.</p>
+          <p class="presenter-foot">Slides 7 to 12 · Tom Allory</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <h2>Traffic flow</h2>
+          <p>The browser talks to Nginx first. Nginx forwards to the Vite dev server and to both APIs on their internal ports.</p>
+          <div class="mermaid">flowchart LR
+    B[Browser] --> N[Nginx port 80]
+    N --> F[Frontend]
+    N --> A1[API1 Products]
+    N --> A2[API2 Orders]
+    A1 --> P1[(Postgres 1)]
+    A2 --> P2[(Postgres 2)]
+    A2 --> R[(Redis)]</div>
+          <p class="presenter-foot">Slides 7 to 12 · Tom Allory</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner gitea-accent">
+          <h2>Why four Docker networks</h2>
+          <p>Compose attaches each container only to the networks it needs. The front tier shares one network. Each database sits on a private link with its API. Redis is only on the orders side.</p>
+          <div class="mermaid">flowchart TB
+    subgraph fn[Frontend network]
+      N[Nginx]
+      F[Frontend]
+      X1[API1]
+      X2[API2]
+    end
+    subgraph n1[API1 and DB1]
+      A1b[API1]
+      D1[(DB1)]
+    end
+    subgraph n2[API2 and DB2]
+      A2b[API2]
+      D2[(DB2)]
+    end
+    subgraph n3[API2 and Redis]
+      A2c[API2]
+      Rd[(Redis)]
+    end</div>
+          <p class="presenter-foot">Slides 7 to 12 · Tom Allory</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <h2>How we build service images</h2>
+          <p>For the Node services we use two stages. The first installs dependencies from the lockfile. The final stage copies only what we need to run, runs as a normal user, and exposes a health check the orchestrator can use.</p>
+          <div class="mermaid">flowchart LR
+    S1[Stage deps: npm install] --> S2[Final image: app user, healthcheck, start app]</div>
+          <p>Official images for Nginx, Postgres, and Redis are pinned to specific versions so a rebuild six months later still pulls the same minor line we tested.</p>
+          <p class="presenter-foot">Slides 7 to 12 · Tom Allory</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <h2>Data that survives a restart</h2>
+          <p>Postgres stores data in named volumes so removing a container does not wipe the catalog or orders. The frontend source folder is bind-mounted for local development so you can edit React files without rebuilding the image each time.</p>
+          <div class="mermaid">flowchart TB
+    H[Your laptop folder] -. bind mount .-> FE[Frontend container]
+    V1[(Volume api1-db-data)] --> DB1[(Postgres 1)]
+    V2[(Volume api2-db-data)] --> DB2[(Postgres 2)]</div>
+          <p class="presenter-foot">Slides 7 to 12 · Tom Allory</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <h2>Checking networks in Docker</h2>
+          <img src="screenshots/docker_network.png" alt="Docker network inspection" />
+          <p class="caption">This matches what we describe on the previous slides: several networks and services attached the way we expect.</p>
+          <p class="presenter-foot">Slides 7 to 12 · Tom Allory</p>
+        </div>
+      </section>
+
+      <section class="slide part-slide">
+        <div class="slide-inner">
+          <p class="part-label">Part 3 of 4</p>
+          <div class="big-num">13–18</div>
+          <h2>Product and API behaviour</h2>
+          <p class="subtitle">What you see on screen and how calls and filters work, without dumping OpenAPI screens.</p>
+          <p class="presenter-foot">Slides 13 to 18 · Ovia Mahalakshmi CHANEMOUGANANDAM</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <h2>Main screen</h2>
+          <img src="screenshots/UI%20principale.png" alt="Main application UI" />
+          <p class="caption">Products on one side, orders and events on the other. Theme can be switched for demos.</p>
+          <p class="presenter-foot">Slides 13 to 18 · Ovia Mahalakshmi CHANEMOUGANANDAM</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <h2>What the frontend asks the APIs</h2>
+          <p>The products list loads from the first service. You can send a new product with name, price, and category. Orders are read from the second service, and you can create an order with a product id and a quantity.</p>
+          <p>The orders service also exposes a short event feed the UI polls every few seconds so new activity shows up without reloading the whole page.</p>
+          <p class="presenter-foot">Slides 13 to 18 · Ovia Mahalakshmi CHANEMOUGANANDAM</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner gitea-accent">
+          <h2>Filters and categories</h2>
+          <p>Products can be filtered by category. When you pick a category, only matching rows are requested. If you clear the filter, the full list comes back.</p>
+          <p>Categories are a fixed set the UI knows about (general, electronics, clothing, food, books, other) so demos stay consistent. GraphQL is available on the products service for alternative clients, but the dashboard uses the REST-style JSON endpoints.</p>
+          <p class="presenter-foot">Slides 13 to 18 · Ovia Mahalakshmi CHANEMOUGANANDAM</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <h2>Behind the UI and how we demo it</h2>
+          <p>Nginx routes traffic to the right service. Redis backs order events on API2. Both APIs ship OpenAPI descriptions if someone wants to try endpoints live during questions.</p>
+          <p>For a local demo, bring Compose up and use the gateway on port eighty so the jury sees the real proxy path. The APIs stay reachable on their usual host ports if you need a quick check.</p>
+          <p class="presenter-foot">Slides 13 to 18 · Ovia Mahalakshmi CHANEMOUGANANDAM</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <h2>Starting in a safe order</h2>
+          <p>Compose waits until Postgres reports healthy before the APIs start. That avoids connection errors during the first seconds. Health checks on the Node containers give Docker a simple way to see if the process is still answering.</p>
+          <p class="presenter-foot">Slides 13 to 18 · Ovia Mahalakshmi CHANEMOUGANANDAM</p>
+        </div>
+      </section>
+
+      <section class="slide part-slide">
+        <div class="slide-inner">
+          <p class="part-label">Part 4 of 4</p>
+          <div class="big-num">19–24</div>
+          <h2>Gitea Actions and Docker Hub</h2>
+          <p class="subtitle">Security scans, builds, tags, and what we push to the registry.</p>
+          <p class="presenter-foot">Suggested: Anis Amairi</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <h2>What runs on every push</h2>
+          <p>The workflow clones the repo, scans configuration files with Trivy, builds each service image locally for scanning, then fails the job if medium or higher issues appear on those images.</p>
+          <p>Only after that stage succeeds do we push to Docker Hub from the build job. Tagged releases add a human-readable version label that points at the same bits as the commit hash image.</p>
+          <div class="mermaid">flowchart TD
+    E[Push or PR or version tag] --> SC[Security scan job]
+    SC --> T1[Trivy config on repo]
+    SC --> T2[Build three images for scan]
+    SC --> T3[Trivy image each service]
+    SC --> BP[Build and push job]
+    BP --> H[Docker Hub latest and commit id]
+    BP --> V[Optional extra tag from same digest]</div>
+          <p class="presenter-foot">Slides 19 to 24</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner gitea-accent">
+          <h2>Scan results for the three microservices</h2>
+          <p>We run the same scanner image the course recommends. These captures are from the pipeline output for frontend, API1, and API2.</p>
+          <div class="grid-3">
+            <figure><img src="screenshots/frontend_scan.png" alt="Frontend scan" /><figcaption>Frontend image</figcaption></figure>
+            <figure><img src="screenshots/ap1_scan.png" alt="API1 scan" /><figcaption>Products API</figcaption></figure>
+            <figure><img src="screenshots/ap2_scan.png" alt="API2 scan" /><figcaption>Orders API</figcaption></figure>
+          </div>
+          <p class="presenter-foot">Slides 19 to 24</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner">
+          <h2>Runs on Gitea Actions</h2>
+          <div class="grid-2">
+            <figure>
+              <img src="screenshots/build_and_push%20action_for_tag_sha.png" alt="Build and push" />
+              <figcaption>Build and push with tag and commit id</figcaption>
+            </figure>
+            <figure>
+              <img src="screenshots/ci%20trigger%20main%20pipeline%20test%20(no%20tag).png" alt="Main branch run" />
+              <figcaption>Main branch without a release tag</figcaption>
+            </figure>
+          </div>
+          <img src="screenshots/ci_create%20version%20tags%20from%20pushed%20sha%20images.png" alt="Version tags from SHA" style="margin-top:0.5rem;" />
+          <p class="caption">Version labels are created from the digest already pushed for the commit, so we do not rebuild the same Dockerfile twice for a tag.</p>
+          <p class="presenter-foot">Slides 19 to 24</p>
+        </div>
+      </section>
+
+      <section class="slide">
+        <div class="slide-inner gitea-accent">
+          <h2>Published images and tags</h2>
+          <p>Each microservice has its own repository on Docker Hub. You see latest for the newest main build, a tag that matches the Git commit id, and after a release a short version tag that still points at the same digest as that commit.</p>
+          <div class="grid-3">
+            <figure><img src="screenshots/microservices-frontend_tags.png" alt="Frontend tags" /><figcaption>Frontend</figcaption></figure>
+            <figure><img src="screenshots/microservices-api1_tags.png" alt="API1 tags" /><figcaption>Products API</figcaption></figure>
+            <figure><img src="screenshots/microservices-api2_tags.png" alt="API2 tags" /><figcaption>Orders API</figcaption></figure>
+          </div>
+          <div class="mermaid" style="margin-top:0.65rem;">flowchart LR
+    I[One digest per build] --> L[latest]
+    I --> S[commit id tag]
+    I --> V[release tag]</div>
+          <p class="presenter-foot">Slides 19 to 24</p>
+        </div>
+      </section>
+
+      <section class="slide title-slide">
+        <div class="slide-inner">
+          <h2>Who did what</h2>
+          <p style="text-align:left;max-width:640px;margin:0 auto;">Anis focused on Gitea Actions, Trivy, reviews, and glue between services. Othman built the UI and Nginx routing. Ovia owned the products API, its database, and its container story. Tom owned orders, Redis, and the second database.</p>
+          <p class="subtitle" style="margin-top:1.5rem;">Thanks for listening. Questions welcome.</p>
+          <div class="logos" style="justify-content:center;display:flex;gap:1.25rem;margin-top:1rem;">
+            <img src="https://cdn.simpleicons.org/docker/2496ED" alt="" style="height:36px;" />
+            <img src="https://cdn.simpleicons.org/gitea/5AA626" alt="" style="height:36px;" />
+          </div>
+          <p class="presenter-foot">Whole team · closing</p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <p class="hint">Arrows, Space, Home, End · F11 fullscreen</p>
+  <div class="nav">
+    <button type="button" id="prev" aria-label="Previous">Back</button>
+    <span class="progress" id="progress">1 / 24</span>
+    <button type="button" id="next" aria-label="Next">Next</button>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "dark",
+      themeVariables: {
+        primaryColor: "#1a3a52",
+        primaryTextColor: "#e8f4fc",
+        lineColor: "#2496ed",
+        secondaryColor: "#2d5016",
+        tertiaryColor: "#0a1628"
+      },
+      securityLevel: "loose",
+      flowchart: { curve: "basis", padding: 12 }
+    });
+    const track = document.getElementById("slides");
+    const slides = track.querySelectorAll(".slide");
+    const total = slides.length;
+    const bar = document.getElementById("progressBar");
+    let index = 0;
+    function update() {
+      track.style.transform = "translateX(" + -index * 100 + "%)";
+      document.getElementById("progress").textContent = (index + 1) + " / " + total;
+      document.getElementById("prev").disabled = index === 0;
+      document.getElementById("next").disabled = index === total - 1;
+      bar.style.transform = "scaleX(" + (index + 1) / total + ")";
+    }
+    document.getElementById("prev").addEventListener("click", function () { if (index > 0) { index--; update(); } });
+    document.getElementById("next").addEventListener("click", function () { if (index < total - 1) { index++; update(); } });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+        e.preventDefault();
+        if (index < total - 1) { index++; update(); }
+      } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+        e.preventDefault();
+        if (index > 0) { index--; update(); }
+      } else if (e.key === "Home") { index = 0; update(); }
+      else if (e.key === "End") { index = total - 1; update(); }
+    });
+    update();
+  </script>
+</body>
+</html>
